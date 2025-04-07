@@ -31,17 +31,21 @@ POLYGON_API_KEY = "anf984U5ZJXr85IU_ZIhqFZoaIW1mzHN"
 def get_intraday_candles(symbol="SPY"):
     to_date = datetime.utcnow()
     from_date = to_date - timedelta(minutes=30)
-    url = f"https://api.polygon.io/v2/aggs/ticker/{symbol}/range/1/minute/{from_date.date()}?adjusted=true&sort=asc&limit=1000&apiKey={POLYGON_API_KEY}"
+
+    url = f"https://api.polygon.io/v2/aggs/ticker/{symbol}/range/1/minute/{from_date.strftime('%Y-%m-%d')}/{to_date.strftime('%Y-%m-%d')}?adjusted=true&sort=asc&limit=1000&apiKey={POLYGON_API_KEY}"
+    
     try:
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json().get("results", [])
-            df = pd.DataFrame(data)
-            df["t"] = pd.to_datetime(df["t"], unit="ms")
-            return df.rename(columns={"o": "open", "h": "high", "l": "low", "c": "close"})
+            if data:
+                df = pd.DataFrame(data)
+                df["t"] = pd.to_datetime(df["t"], unit="ms")
+                return df.rename(columns={"o": "open", "h": "high", "l": "low", "c": "close"})
     except Exception as e:
         st.warning(f"Chart fetch error: {e}")
     return pd.DataFrame()
+
 
 # ------------------------------------
 # Flow Utility (Unusual Whales)
